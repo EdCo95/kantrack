@@ -40,8 +40,6 @@ kantrack add "Implement authentication"
 Specify the column with `--to "name"`, and the size with `--size "size"`. If you specify a column name that doesn't exist, you'll be asked if you'd like to create it.
 
 #### List Tasks (CLI)
-List tasks in each column.
-
 ```
 kantrack list
 ```
