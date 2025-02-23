@@ -7,23 +7,22 @@
                 "size": "Small"
             }
         ],
-        "in_progress": [
-            {
-                "title": "Upload to PyPI",
-                "desc": "",
-                "size": "Small"
-            },
+        "in_progress": [],
+        "done": [
             {
                 "title": "README + badges etc",
                 "desc": "",
                 "size": "Small"
-            }
-        ],
-        "done": [
+            },
             {
                 "title": "Setup pre-commit, black, etc",
                 "desc": "",
                 "size": "Medium"
+            },
+            {
+                "title": "Upload to PyPI",
+                "desc": "",
+                "size": "Small"
             },
             {
                 "title": "Check all is working",

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kantrack"
-version = "0.1.6"
+version = "0.1.7"
 description = "Super lightweight task tracker that integrates directly with Git repositories."
 authors = ["Ed Collins <edward.g.collins.1995@gmail.com>"]
 license = "MIT"

@@ -6,6 +6,10 @@
 
 Kantrack is a lightweight task tracker that lives in your Git repositories, keeping project tasks versioned alongside your code. It features a simple FastAPI backend, a minimal web UI, and a CLI for managing tasks. Kantrack is intended for solo developers who want an easy way to track their projects, keeping the task tracking as close to the code as possible - no need to sign in to 3rd party software, nothing to pay, and no risk of forgetting where all of your plans and notes are when you return to a project after six months.
 
+
+![Kantrack Demo](docs/demo.gif)
+
+
 # Features
 * Git-native – Task data is stored in a json file inside your repository.
 * Minimal and fast – A FastAPI backend with a simple web interface.
