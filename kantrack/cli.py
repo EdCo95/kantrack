@@ -149,7 +149,7 @@ def start(
 @app.command()
 def add(
     task: str,
-    column: str = typer.Option(
+    to: str = typer.Option(
         "planned",
         help="The column to add the task to",
         autocompletion=_column_autocomplete,
@@ -163,18 +163,18 @@ def add(
         typer.echo(f"📂 No Kanban board found. Creating a new one at {KANBAN_FILE}...")
         data = DEFAULT_KANBAN
 
-    column = column.lower().strip().replace(" ", "_")
+    to = to.lower().strip().replace(" ", "_")
 
-    made_column = _maybe_make_column(column, data)
+    made_column = _maybe_make_column(to, data)
     if not made_column:
         return
 
-    data["data"][column].append({"title": task, "desc": "", "size": size})
+    data["data"][to].append({"title": task, "desc": "", "size": size})
 
     with open(KANBAN_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
-    typer.echo(f"✅ Added task: {task} to column '{column}'")
+    typer.echo(f"✅ Added task: {task} to column '{to}'")
 
 
 @app.command()
@@ -219,14 +219,14 @@ def rm(
 @app.command()
 def mv(
     task_name: str = typer.Argument(..., autocompletion=_task_autocomplete),
-    new_column: str = typer.Argument(..., autocompletion=_column_autocomplete),
+    to: str = typer.Argument(..., autocompletion=_column_autocomplete),
 ):
     """Moves the specified task to a new column."""
     data = _load_board()
 
-    new_column = new_column.lower().strip().replace(" ", "_")
+    to = to.lower().strip().replace(" ", "_")
 
-    made_column = _maybe_make_column(new_column, data)
+    made_column = _maybe_make_column(to, data)
     if not made_column:
         return
 
@@ -235,11 +235,11 @@ def mv(
             title = task["title"].lower().strip()
             if title == task_name.lower().strip():
                 task_list.remove(task)
-                data["data"][new_column].append(task)
+                data["data"][to].append(task)
                 with open(KANBAN_FILE, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4)
                 typer.echo(
-                    f"✅ Moved task '{task_name}' from '{column}' to column '{new_column}'."
+                    f"✅ Moved task '{task_name}' from '{column}' to column '{to}'."
                 )
                 return
 
