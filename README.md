@@ -39,7 +39,7 @@ Start the board and open the web UI:
 kantrack start
 ```
 
-Runs a FastAPI server on 127.0.0.1:8000. You can specify the host and port, but you'd need to manually update the front-end code to point at the new host/port if you do so.
+Runs a FastAPI server on `127.0.0.1:8000`. You can specify the host and port, but you'd need to manually update the front-end code to point at the new host/port if you do so.
 
 #### Add a Task (CLI)
 Add a task to the default column ("planned")
