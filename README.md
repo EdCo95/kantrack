@@ -56,15 +56,14 @@ kantrack rm "task name"
 
 # Development
 
-
-#### Clone and install dependencies
+Clone and install dependencies:
 ```
 git clone https://github.com/YOUR_GITHUB_USERNAME/kantrack.git
 cd kantrack
 poetry install
 ```
 
-#### Set up pre-commit hooks
+Set up pre-commit hooks:
 ```
 pre-commit install
 pre-commit run --all-files
