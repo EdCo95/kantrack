@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Kanban with Dynamic Columns, Editable Cards, & API Calls</title>
+  <style>
+    /* Definitions */
+    :root {
+      --background-color: #F5F5F5;
+      --kanban-board-color: #E8F6F8;
+      --column-heading-color: #ffffff;
+      --card-bg-color: #FFFFFF;
+      --primary-button-color: #FFA987;
+      --secondary-button-color: #F4D35E;
+      --text-color: #333333;
+      --title-color: #888888;
+    }
+
+    /* Basic styling */
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      /* background: #f1f3f5; */
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+
+    /* Error banner at top */
+    .error-banner {
+      background: #ff922b; /* orange */
+      color: #fff;
+      padding: 1rem;
+      display: none; /* hidden by default */
+      align-items: center;
+      justify-content: space-between;
+    }
+    .error-banner.show {
+      display: flex;
+    }
+    .error-text {
+      margin: 0;
+    }
+    .retry-button {
+      background: #fff;
+      color: #ff922b;
+      border: 1px solid #fff;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+
+    .banner {
+      background-color: var(--title-color); /* or whatever color you like */
+      color: #fff;
+      text-align: left;
+      padding: 0.25rem;         /* small padding for a thinner banner */
+      margin-bottom: 1rem;      /* add space below if you wish */
+    }
+
+    .banner-title {
+      margin: 0;
+      font-size: 1rem;         /* small text */
+      font-weight: normal;     /* or lighter if you prefer */
+    }
+
+    /* Layout for the board */
+    .kanban {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 90%;
+      margin: 0 auto;
+    }
+    .column {
+      flex: 1;
+      min-height: 300px;
+      background-color: #f8f9fa;
+      border: 2px dashed #ced4da;
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: background-color 0.3s;
+      background-color: var(--column-heading-color);
+    }
+    /* When dragging over a column, highlight it */
+    .column.over {
+      background-color: #e9ecef;
+      border-color: #adb5bd;
+    }
+    .column-title {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      text-transform: capitalize;
+    }
+
+    /* Draggable card style */
+    .card {
+      background-color: var(--card-bg-color);
+      border: 1px solid var(--column-heading-color);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      cursor: grab;
+      user-select: none;
+      transition: box-shadow 0.3s;
+    }
+    /* While user is actively dragging an item, show a different cursor */
+    .card:active {
+      cursor: grabbing;
+    }
+    /* Optionally hide or fade the card while dragging */
+    .dragging {
+      opacity: 0.5;
+    }
+
+    /* Placeholder indicator for reordering */
+    .placeholder {
+      background-color: #dc3545;
+      height: 4px;
+      margin: 0.5rem 0;
+      border-radius: 2px;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none; /* hidden by default */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000; /* above other content */
+    }
+
+    /* Modal content */
+    .modal {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      width: 400px;
+      max-width: 90%;
+      padding: 1rem;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .modal input,
+    .modal textarea,
+    .modal select {
+      width: 100%; /* Make them fully responsive */
+      box-sizing: border-box; /* Ensures padding doesn't increase the width */
+    }
+
+    input.styled-input {
+      resize: none;
+    }
+    textarea.styled-input {
+      resize: none;
+    }
+
+    .styled-input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      resize: vertical; /* Only applies to textarea */
+      transition: all 0.3s ease-in-out;
+      background-color: #f8f8f8;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .styled-input:focus {
+      border-color: #007bff;
+      background-color: #fff;
+      outline: none;
+      box-shadow: 0 0 6px rgba(0, 123, 255, 0.5);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    label {
+      font-weight: 600;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button.save-btn {
+      align-self: flex-end;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.save-btn:hover {
+      background: #0056b3;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end; /* or 'space-between' */
+      gap: 1rem; /* adds space between buttons */
+      margin-top: 1rem;
+    }
+
+    .save-btn {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .save-btn:hover {
+      background: #0056b3;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      background: #c82333;
+    }
+
+    .new-card-btn {
+      background: transparent;
+      border: 2px dashed #007bff;
+      color: #007bff;
+      padding: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .new-card-btn:hover {
+      background: #007bff;
+      color: #fff;
+    }
+
+    /* Utility class to show modal */
+    .show {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Error Banner -->
+  <div class="error-banner" id="errorBanner">
+    <p class="error-text">Unsaved changes. Please try again.</p>
+    <button class="retry-button" id="retryBtn">Retry</button>
+  </div>
+
+  <header class="banner">
+    <h3 class="banner-title"><strong>Kantrack</strong></h3>
+  </header>
+
+  <!-- Kanban Board dynamically generated -->
+  <div class="kanban" id="kanbanBoard"></div>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <label for="modalTitleInput">Title:</label>
+      <input type="text" id="modalTitleInput" class="styled-input"/>
+
+      <label for="modalDescInput">Description:</label>
+      <textarea id="modalDescInput" rows="10" class="styled-input"></textarea>
+
+      <label for="modalSizeInput">Size:</label>
+      <select id="modalSizeInput">
+        <option value="Small">Small</option>
+        <option value="Medium">Medium</option>
+        <option value="Large">Large</option>
+      </select>
+
+      <div class="modal-footer">
+        <button class="save-btn" id="saveChanges">Save</button>
+        <button class="delete-btn" id="deleteCard">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Example data structure
+    // In real usage, you might fetch this from the server on page load.
+    let kanban = {
+      "planned": [
+        { title: "Task 1", desc: "This is the description for Task 1.", size: "Small" },
+        { title: "Task 2", desc: "Description for Task 2.", size: "Medium" }
+      ],
+      "in_progress": [],
+      "done": []
+    };
+
+    // We'll create references for dynamic elements
+    const kanbanBoard = document.getElementById('kanbanBoard');
+
+    // Modal references
+    const modalOverlay = document.getElementById('modalOverlay');
+    const closeModalBtn = document.getElementById('closeModal');
+    const titleInput = document.getElementById('modalTitleInput');
+    const descInput = document.getElementById('modalDescInput');
+    const sizeSelect = document.getElementById('modalSizeInput');
+    const saveBtn = document.getElementById('saveChanges');
+
+    // Error handling references
+    const errorBanner = document.getElementById('errorBanner');
+    const retryBtn = document.getElementById('retryBtn');
+
+    // We'll track the card that's being dragged & the card being edited
+    let draggedCard = null;
+    let currentCard = null;
+    let newCardColumn = null;
+
+    // Deleting cards
+    let isAskingConfirm = false;
+    const deleteBtn = document.getElementById('deleteCard');
+    deleteBtn.addEventListener('click', handleDeleteClick);
+
+    // Global placeholder for reorder indicator
+    const placeholder = document.createElement('div');
+    placeholder.classList.add('placeholder');
+
+    // Load the kanban data from the server
+    window.addEventListener('DOMContentLoaded', loadFromAPI);
+
+    // On page load, build the board from the kanban data
+    buildBoardFromData(kanban);
+
+    // 1) Build the columns & cards from the "kanban" object
+    function buildBoardFromData(data) {
+      // Clear any existing HTML
+      kanbanBoard.innerHTML = '';
+
+      // For each key in the data object, create a column
+      Object.keys(data).forEach(columnKey => {
+        // Create a column container
+        const columnDiv = document.createElement('div');
+        columnDiv.classList.add('column');
+        columnDiv.setAttribute('data-column', columnKey);
+
+        // Create a column title
+        const colTitle = document.createElement('h2');
+        colTitle.classList.add('column-title');
+        colTitle.textContent = columnKey.replace('_', ' ');
+        columnDiv.appendChild(colTitle);
+
+        // Add cards into the column
+        data[columnKey].forEach(cardData => {
+          const cardEl = createCardElement(cardData);
+          columnDiv.appendChild(cardEl);
+        });
+
+        const newCardBtn = document.createElement('button');
+        newCardBtn.classList.add('new-card-btn');
+        newCardBtn.textContent = '+ Add Card';
+        newCardBtn.addEventListener('click', () => openNewCardModal(columnKey));
+
+        // Append the button to the column
+        columnDiv.appendChild(newCardBtn);
+
+        // Setup drag events on the column
+        columnDiv.addEventListener('dragover', handleColumnDragOver);
+        columnDiv.addEventListener('dragenter', handleColumnDragEnter);
+        columnDiv.addEventListener('dragleave', handleColumnDragLeave);
+        columnDiv.addEventListener('drop', handleColumnDrop);
+
+        // Add column to the board
+        kanbanBoard.appendChild(columnDiv);
+      });
+    }
+
+    // 2) Create an individual card element from card data
+    function createCardElement(cardData) {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.setAttribute('draggable', 'true');
+
+      // Store the data in data-* attributes
+      card.setAttribute('data-title', cardData.title);
+      card.setAttribute('data-desc', cardData.desc);
+      card.setAttribute('data-size', cardData.size);
+
+      // Visible text
+      card.textContent = cardData.title || 'Untitled';
+
+      // Add drag & click logic
+      card.addEventListener('dragstart', handleCardDragStart);
+      card.addEventListener('dragend', handleCardDragEnd);
+      card.addEventListener('click', handleCardClick);
+
+      return card;
+    }
+
+    // 3) Drag event handlers for cards
+    function handleCardDragStart(e) {
+      draggedCard = e.target;
+      setTimeout(() => {
+        draggedCard.classList.add('dragging');
+      }, 0);
+    }
+
+    function handleCardDragEnd(e) {
+      if (draggedCard) {
+        draggedCard.classList.remove('dragging');
+        draggedCard = null;
+        if (placeholder.parentNode) {
+          placeholder.parentNode.removeChild(placeholder);
+        }
+
+        // After dropping, update local kanban data & attempt save
+        updateDataFromDOM();
+        saveToAPI();
+      }
+    }
+
+    // 4) Column event handlers
+    function handleColumnDragOver(e) {
+      e.preventDefault();
+      const column = e.currentTarget;
+      const afterElement = getCardAfterMouse(column, e.clientY);
+      if (!afterElement) {
+        column.appendChild(placeholder);
+      } else {
+        column.insertBefore(placeholder, afterElement);
+      }
+    }
+
+    function handleColumnDragEnter(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('over');
+    }
+
+    function handleColumnDragLeave(e) {
+      e.currentTarget.classList.remove('over');
+    }
+
+    function handleColumnDrop(e) {
+      const column = e.currentTarget;
+      column.classList.remove('over');
+      if (draggedCard) {
+        // Insert the card in front of the placeholder
+        column.insertBefore(draggedCard, placeholder);
+
+        // Then explicitly move the "+ Add Card" button to the end
+        const addCardBtn = column.querySelector('.new-card-btn');
+        column.appendChild(addCardBtn);
+      }
+}
+
+    // 5) Card click => open modal
+    function handleCardClick(e) {
+      currentCard = e.currentTarget;
+
+      // Populate the modal
+      titleInput.value = currentCard.getAttribute('data-title') || '';
+      descInput.value = currentCard.getAttribute('data-desc') || '';
+      sizeSelect.value = currentCard.getAttribute('data-size') || 'Small';
+
+      // Show modal
+      modalOverlay.classList.add('show');
+    }
+
+    function openNewCardModal(columnKey) {
+      newCardColumn = columnKey; // Store the column name
+      titleInput.value = ''; // Empty title
+      descInput.value = ''; // Empty description
+      sizeSelect.value = 'Small'; // Default size
+
+      modalOverlay.classList.add('show');
+    }
+
+    // 6) Modal save => update card data and close
+    saveBtn.addEventListener('click', () => {
+      if (newCardColumn) {
+        // Create a new card object
+        const newCardData = {
+          title: titleInput.value || 'Untitled',
+          desc: descInput.value,
+          size: sizeSelect.value
+        };
+
+        // Add new card to the correct column in data
+        kanban[newCardColumn].push(newCardData);
+
+        // Find the right column and add the new card to the DOM
+        const columnDiv = document.querySelector(`[data-column="${newCardColumn}"]`);
+        const newCardEl = createCardElement(newCardData);
+        columnDiv.insertBefore(newCardEl, columnDiv.querySelector('.new-card-btn'));
+
+        // Reset and close modal
+        newCardColumn = null;
+        modalOverlay.classList.remove('show');
+
+        // Save data to API
+        saveToAPI();
+      } else if (currentCard) {
+        // Editing an existing card
+        currentCard.setAttribute('data-title', titleInput.value);
+        currentCard.setAttribute('data-desc', descInput.value);
+        currentCard.setAttribute('data-size', sizeSelect.value);
+        currentCard.textContent = titleInput.value || 'Untitled';
+
+        updateDataFromDOM();
+        saveToAPI();
+        modalOverlay.classList.remove('show');
+      }
+    });
+
+    // Called when user clicks "Delete"
+    function handleDeleteClick() {
+      // First click => morph into "Are you sure?"
+      if (!isAskingConfirm) {
+        deleteBtn.textContent = 'Are you sure?';
+        // Optionally change style to highlight it's a dangerous action
+        deleteBtn.style.backgroundColor = '#dc3545';
+        deleteBtn.style.color = '#fff';
+        // Set state so next click means "Yes, actually delete."
+        isAskingConfirm = true;
+        return;
+      }
+
+      // Second click => user confirmed deletion
+      if (currentCard) {
+        currentCard.remove();
+        currentCard = null;
+      }
+
+      // Rebuild the data from DOM
+      updateDataFromDOM();
+      // Save the new data to API
+      saveToAPI();
+
+      // Close the modal
+      modalOverlay.classList.remove('show');
+
+      // Reset the button text/state in case user re‐opens the modal
+      resetDeleteButton();
+    }
+
+    // Reset the delete button so next time we open the modal
+    // it doesn't still say "Are you sure?"
+    function resetDeleteButton() {
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.style.backgroundColor = 'red';
+      deleteBtn.style.color = 'white';
+      isAskingConfirm = false;
+    }
+
+    closeModalBtn.addEventListener('click', () => {
+      resetDeleteButton();
+      modalOverlay.classList.remove('show');
+    });
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        resetDeleteButton();
+        modalOverlay.classList.remove('show');
+      }
+    });
+
+    // 7) Convert the DOM back into the kanban data object
+    function updateDataFromDOM() {
+      // Reset the global kanban data structure
+      // We'll rebuild it from the current columns
+
+      // The board contains multiple columns
+      const columns = kanbanBoard.querySelectorAll('.column');
+      let newData = {};
+
+      columns.forEach(col => {
+        const colKey = col.getAttribute('data-column');
+        const cardDivs = col.querySelectorAll('.card');
+        newData[colKey] = [];
+        cardDivs.forEach(div => {
+          newData[colKey].push({
+            title: div.getAttribute('data-title'),
+            desc: div.getAttribute('data-desc'),
+            size: div.getAttribute('data-size')
+          });
+        });
+      });
+
+      kanban = newData;
+      // console.log('Updated kanban data:', kanban);
+    }
+
+    // 8) Attempt to save the entire kanban JSON to the server
+    async function saveToAPI() {
+      hideErrorBanner(); // clear any existing error
+
+      try {
+        // Make a POST request with the entire kanban object
+        // Replace with your real endpoint
+        const response = await fetch('http://localhost:8000/api/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({"data": kanban})
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        // If successful, do nothing or show success message
+        // console.log('Kanban saved successfully');
+      } catch (err) {
+        // console.error('Save error:', err);
+        showErrorBanner();
+      }
+    }
+
+    async function loadFromAPI() {
+      try {
+        const response = await fetch('http://localhost:8000/api/load', { method: 'GET' });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Ensure we have a valid Kanban structure
+        if (typeof data === 'object' && data !== null) {
+          kanban = data['data'];
+        }
+
+      } catch (err) {
+        console.error('Load error:', err);
+        showErrorBanner();
+      } finally {
+        // Whether it fails or succeeds, build the board
+        buildBoardFromData(kanban);
+      }
+    }
+
+    // 9) Error banner logic
+    function showErrorBanner() {
+      errorBanner.classList.add('show');
+    }
+
+    function hideErrorBanner() {
+      errorBanner.classList.remove('show');
+    }
+
+    retryBtn.addEventListener('click', () => {
+      saveToAPI();
+    });
+
+    // Helper to find correct position for placeholder
+    function getCardAfterMouse(column, mouseY) {
+      // Only consider actual cards, ignore the .new-card-btn
+      const cardElements = [...column.querySelectorAll('.card:not(.dragging)')];
+      return cardElements.find(card => {
+        const rect = card.getBoundingClientRect();
+        return mouseY < rect.top + rect.height / 2;
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+    "data": {
+        "planned": [
+            {
+                "title": "Deal with duplicate titles",
+                "desc": "Titles are used for everything, there is no duplicate handling atm\n",
+                "size": "Small"
+            }
+        ],
+        "in_progress": [
+            {
+                "title": "Setup pre-commit, black, etc",
+                "desc": "",
+                "size": "Medium"
+            }
+        ],
+        "done": [
+            {
+                "title": "Check all is working",
+                "desc": "",
+                "size": "Medium"
+            }
+        ]
+    }
+}

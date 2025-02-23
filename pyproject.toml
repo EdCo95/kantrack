@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "kantrack"
+version = "0.1.0"
+description = "Kantrack is a lightweight Kanban task tracker that integrates directly with Git repositories, keeping project tasks versioned alongside your code. It features a simple FastAPI backend, a minimal web UI, and an intuitive CLI for managing tasks."
+authors = ["Ed Collins <edward.g.collins.1995@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.115.8"
+uvicorn = "^0.34.0"
+typer = "^0.15.1"
+requests = "^2.32.3"
+
+
+[tool.poetry.scripts]
+kantrack = "kantrack.cli:app"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.1.0"
+black = "^25.1.0"
+isort = "^6.0.0"
+
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311']
+
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
