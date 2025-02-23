@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kantrack"
-version = "0.1.1"
+version = "0.1.2"
 description = "Super lightweight task tracker that integrates directly with Git repositories."
 authors = ["Ed Collins <edward.g.collins.1995@gmail.com>"]
 license = "MIT"
@@ -17,10 +17,6 @@ requests = "^2.32.3"
 
 [tool.poetry.scripts]
 kantrack = "kantrack.cli:app"
-
-
-[tool.poetry.include]
-"kantrack/static/**" = { format = "sdist" }
 
 
 [tool.poetry.group.dev.dependencies]
