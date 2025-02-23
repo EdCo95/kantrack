@@ -5,7 +5,9 @@
                 "title": "Setup CI",
                 "desc": "",
                 "size": "Small"
-            },
+            }
+        ],
+        "in_progress": [
             {
                 "title": "Upload to PyPI",
                 "desc": "",
@@ -17,7 +19,6 @@
                 "size": "Small"
             }
         ],
-        "in_progress": [],
         "done": [
             {
                 "title": "Setup pre-commit, black, etc",

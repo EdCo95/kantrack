@@ -1,3 +1,4 @@
+import importlib.resources as resources
 import json
 import os
 from pathlib import Path
@@ -77,4 +78,10 @@ def load_kanban():
 
 
 # Serve the static files
-app.mount("/", StaticFiles(directory="kantrack/static", html=True), name="static")
+try:
+    static_dir = str(resources.files("kantrack").joinpath("static"))
+    if not Path(static_dir).exists():
+        raise RuntimeError(f"Static directory '{static_dir}' does not exist")
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+except RuntimeError as e:
+    print(f"Warning: {e}")
