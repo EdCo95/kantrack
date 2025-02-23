@@ -2,23 +2,37 @@
     "data": {
         "planned": [
             {
-                "title": "Deal with duplicate titles",
-                "desc": "Titles are used for everything, there is no duplicate handling atm\n",
+                "title": "Setup CI",
+                "desc": "",
+                "size": "Small"
+            },
+            {
+                "title": "Upload to PyPI",
+                "desc": "",
+                "size": "Small"
+            },
+            {
+                "title": "README + badges etc",
+                "desc": "",
                 "size": "Small"
             }
         ],
-        "in_progress": [
+        "in_progress": [],
+        "done": [
             {
                 "title": "Setup pre-commit, black, etc",
                 "desc": "",
                 "size": "Medium"
-            }
-        ],
-        "done": [
+            },
             {
                 "title": "Check all is working",
                 "desc": "",
                 "size": "Medium"
+            },
+            {
+                "title": "Deal with duplicate titles",
+                "desc": "Titles are used for everything, there is no duplicate handling atm\n",
+                "size": "Small"
             }
         ]
     }

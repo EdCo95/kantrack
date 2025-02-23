@@ -30,12 +30,27 @@ app.add_middleware(
 
 
 class KanbanData(BaseModel):
-    data: dict
+    data: dict[str, list[dict[str, str]]]
+
+
+def _get_all_task_names(data: KanbanData) -> list[str]:
+    """Get all task names from the Kanban board data."""
+    return [task["title"] for column in data.data.values() for task in column]
+
+
+def _all_task_names_are_unique(data: KanbanData) -> bool:
+    """Check if all task names in the Kanban board data are unique."""
+    all_task_names = _get_all_task_names(data)
+    return len(all_task_names) == len(set(all_task_names))
 
 
 @app.post("/api/save")
 def save_kanban(data: KanbanData):
     """Saves the Kanban board data to a local file."""
+    if not _all_task_names_are_unique(data):
+        raise HTTPException(
+            status_code=400, detail="All task names must be unique within the board."
+        )
     try:
         with open(KANBAN_FILE, "w", encoding="utf-8") as f:
             json.dump(data.model_dump(), f, indent=4)

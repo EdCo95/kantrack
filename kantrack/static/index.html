@@ -503,6 +503,22 @@
       modalOverlay.classList.add('show');
     }
 
+    function checkTitleIsUnique(title, newCard) {
+      // Iterate over the columns and get all task names from all columns
+      let existingTitles = [];
+      Object.keys(kanban).forEach(column => {
+        kanban[column].forEach(card => {
+          existingTitles.push(card.title);
+        });
+      });
+      console.log('Existing titles:', existingTitles);
+      if (!newCard) {
+        // If we're editing an existing card, remove the current title
+        existingTitles = existingTitles.filter(t => t !== currentCard.getAttribute('data-title'));
+      }
+      return !existingTitles.includes(title);
+    }
+
     // 6) Modal save => update card data and close
     saveBtn.addEventListener('click', () => {
       if (newCardColumn) {
@@ -512,6 +528,11 @@
           desc: descInput.value,
           size: sizeSelect.value
         };
+
+        if (!checkTitleIsUnique(newCardData.title, true)) {
+          alert('Task names must be unique.');
+          return;
+        }
 
         // Add new card to the correct column in data
         kanban[newCardColumn].push(newCardData);
@@ -528,6 +549,11 @@
         // Save data to API
         saveToAPI();
       } else if (currentCard) {
+        if (!checkTitleIsUnique(titleInput.value, false)) {
+          alert('Task names must be unique.');
+          return;
+        }
+
         // Editing an existing card
         currentCard.setAttribute('data-title', titleInput.value);
         currentCard.setAttribute('data-desc', descInput.value);
